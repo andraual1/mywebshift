@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Plantões Médicos</title>
+    <style>
+        /* Estilos gerais */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        #calendar {
+            width: 100%;
+            height: auto; /* Ajusta a altura dinamicamente */
+            min-height: 400px; /* Define uma altura mínima */
+            overflow: hidden; /* Evita que o conteúdo ultrapasse os limites */
+        }
+        .tab-content {
+            overflow: auto;
+        }
+
+        /* Estilos das abas */
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            border: none;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        .tab:hover {
+            background-color: #45a049;
+            color: white;
+        }
+
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            form {
+                grid-template-columns: 1fr; /* Ajusta para uma única coluna */
+            }
+            .tabs {
+                flex-direction: column; /* Ajusta as abas para ficarem empilhadas */
+            }
+            .tab {
+                margin-bottom: 10px; /* Espaçamento entre abas empilhadas */
+                font-size: 14px; /* Reduz o tamanho da fonte */
+                padding: 8px; /* Ajusta o espaçamento interno */
+            }
+            #calendar {
+                height: 400px; /* Reduz a altura do calendário em telas menores */
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 20px; /* Reduz o tamanho do título */
+            }
+            button {
+                font-size: 14px; /* Ajusta o tamanho do botão */
+                padding: 8px 10px; /* Ajusta o espaçamento do botão */
+            }
+            .tab {
+                font-size: 12px; /* Reduz ainda mais o tamanho da fonte */
+                padding: 6px; /* Ajusta o espaçamento interno para telas muito pequenas */
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Controle de Plantões Médicos</h1>
+        
+        <!-- Seção de Cadastro -->
+        <div id="cadastro">
+            <h2>Cadastrar Novo Plantão</h2>
+            <form id="plantaoForm">
+                <div class="form-group">
+                    <label for="data">Data:</label>
+                    <input type="date" id="data" required>
+                </div>
+                <div class="form-group">
+                    <label for="horaInicio">Hora de Início:</label>
+                    <input type="time" id="horaInicio" required>
+                </div>
+                <div class="form-group">
+                    <label for="tempoPlantao">Tempo de Plantão (horas):</label>
+                    <input type="number" id="tempoPlantao" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="local">Local:</label>
+                    <select id="local" required>
+                        <option value="Notredame Intermédia Diadema">Notredame Intermédia Diadema</option>
+                        <option value="Beneficiencia Portuguesa de SCS">Beneficência Portuguesa de SCS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="valorHora">Valor por Hora (R$):</label>
+                    <input type="number" id="valorHora" step="0.01" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="observacoes">Observações:</label>
+                    <textarea id="observacoes" rows="3" style="width: 100%;"></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <button type="submit">Salvar Plantão</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Seção de Calendário -->
+        <div id="calendario">
+            <h2>Calendário de Plantões</h2>
+            <div id="calendar"></div>
+        </div>
+        
+        <!-- Seção de Resumo Financeiro -->
+        <div id="resumo">
+            <h2>Resumo Financeiro Mensal</h2>
+            <div class="summary-header">
+                <div class="form-group">
+                    <label for="mesResumo">Selecione o Mês:</label>
+                    <select id="mesResumo">
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="anoResumo">Ano:</label>
+                    <select id="anoResumo">
+                        <option value="2023">2023</option>
+                        <option value="2024" selected>2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+                <button onclick="filtrarResumo()">Filtrar</button>
+            </div>
+            <div id="resumoContent">
+                <!-- Aqui será carregado o resumo financeiro -->
+                <div class="summary-item">
+                    <h3>Notredame Intermédia Diadema</h3>
+                    <p>Total de horas: 40</p>
+                    <p>Valor total: R$ 4.000,00</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Beneficência Portuguesa de SCS</h3>
+                    <p>Total de horas: 24</p>
+                    <p>Valor total: R$ 2.400,00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/pt-br.js"></script>
+    
+    <script>
+        // Adicione o SDK do Firebase ao seu projeto
+        import { initializeApp } from "firebase/app";
+        import { getFirestore, collection, addDoc } from "firebase/firestore";
+
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_DOMÍNIO",
+            projectId: "SEU_ID_PROJETO",
+            storageBucket: "SEU_BUCKET",
+            messagingSenderId: "SEU_ID_MENSAGENS",
+            appId: "SEU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Função para salvar dados no Firestore
+        async function salvarPlantao(data) {
+            try {
+                const docRef = await addDoc(collection(db, "plantoes"), data);
+                console.log("Plantão salvo com ID: ", docRef.id);
+            } catch (e) {
+                console.error("Erro ao salvar plantão: ", e);
+            }
+        }
+
+        // Função para alternar entre abas
+        function openTab(tabName) {
+            const tabs = document.getElementsByClassName('tab');
+            const tabContents = document.getElementsByClassName('tab-content');
+            
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+                tabContents[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            // Se for a aba do calendário, redimensiona
+            if (tabName === 'calendario') {
+                setTimeout(() => {
+                    $('#calendar').fullCalendar('render');
+                    $('#calendar').fullCalendar('option', 'height', 600); // Define altura fixa
+                }, 100);
+            }
+        }
+        
+        // Inicializa o calendário
+        $(document).ready(function() {
+            $('#calendar').fullCalendar({
+                locale: 'pt-br',
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay'
+                },
+                defaultView: 'month',
+                editable: true,
+                eventLimit: true,
+                events: [
+                    {
+                        title: 'Plantão - Hospital Central',
+                        start: '2024-03-15T08:00:00',
+                        end: '2024-03-15T18:00:00',
+                        local: 'Hospital Central',
+                        valorHora: 100,
+                        horas: 10,
+                        total: 1000
+                    },
+                    {
+                        title: 'Plantão - Clínica Saúde',
+                        start: '2024-03-20T18:00:00',
+                        end: '2024-03-21T06:00:00',
+                        local: 'Clínica Saúde',
+                        valorHora: 120,
+                        horas: 12,
+                        total: 1440
+                    }
+                ],
+                eventClick: function(calEvent, jsEvent, view) {
+                    alert('Plantão: ' + calEvent.title + '\nLocal: ' + calEvent.local + 
+                          '\nValor por hora: R$ ' + calEvent.valorHora + 
+                          '\nTotal: R$ ' + calEvent.total);
+                }
+            });
+
+            // Redimensiona o calendário ao carregar
+            $(window).on('resize', function() {
+                $('#calendar').fullCalendar('option', 'height', $(window).height() - 200); // Ajusta a altura dinamicamente
+            }).trigger('resize');
+        });
+        
+        // Função para filtrar o resumo financeiro
+        function filtrarResumo() {
+            const mes = document.getElementById('mesResumo').value;
+            const ano = document.getElementById('anoResumo').value;
+            
+            // Aqui você faria uma requisição para buscar os dados do mês/ano selecionado
+            // Estou simulando com dados estáticos
+            const resumoContent = document.getElementById('resumoContent');
+            resumoContent.innerHTML = `
+                <div class="summary-item">
+                    <h3>Notredame Intermédia Diadema</h3>
+                    <p>Total de horas: ${Math.floor(Math.random() * 40) + 10}</p>
+                    <p>Valor total: R$ ${(Math.random() * 5000 + 1000).toFixed(2)}</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Beneficência Portuguesa de SCS</h3>
+                    <p>Total de horas: ${Math.floor(Math.random() * 30) + 5}</p>
+                    <p>Valor total: R$ ${(Math.random() * 4000 + 800).toFixed(2)}</p>
+                </div>
+            `;
+        }
+        
+        // Formulário de cadastro
+        document.getElementById('plantaoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const data = document.getElementById('data').value;
+            const horaInicio = document.getElementById('horaInicio').value;
+            const tempoPlantao = document.getElementById('tempoPlantao').value;
+            const local = document.getElementById('local').value; // Captura o valor selecionado
+            const valorHora = document.getElementById('valorHora').value;
+            const observacoes = document.getElementById('observacoes').value;
+
+            // Aqui você pode enviar os dados para o servidor
+            alert(`Plantão cadastrado com sucesso!\nData: ${data}\nHora de Início: ${horaInicio}\nTempo de Plantão: ${tempoPlantao} horas\nLocal: ${local}\nValor por Hora: R$ ${valorHora}\nObservações: ${observacoes}`);
+            this.reset();
+        });
+    </script>
+</body>
+</html>
