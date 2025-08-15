@@ -229,20 +229,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/pt-br.js"></script>
     
     <script>
-        // Adicione o SDK do Firebase ao seu projeto
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "firebase/app";
+        import { getAnalytics } from "firebase/analytics";
         import { getFirestore, collection, addDoc } from "firebase/firestore";
 
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
-            apiKey: "SUA_API_KEY",
-            authDomain: "SEU_DOMÍNIO",
-            projectId: "SEU_ID_PROJETO",
-            storageBucket: "SEU_BUCKET",
-            messagingSenderId: "SEU_ID_MENSAGENS",
-            appId: "SEU_APP_ID"
+        apiKey: "AIzaSyCPCsCD_UwBk_c4weCgTi8r0JyhdQThrZQ",
+        authDomain: "mywebshift.firebaseapp.com",
+        projectId: "mywebshift",
+        storageBucket: "mywebshift.firebasestorage.app",
+        messagingSenderId: "994220258656",
+        appId: "1:994220258656:web:4686ab749f948e3ae19a05",
+        measurementId: "G-LF8XYGQ7M2"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
         // Função para salvar dados no Firestore
@@ -345,19 +354,33 @@
         }
         
         // Formulário de cadastro
-        document.getElementById('plantaoForm').addEventListener('submit', function(e) {
+        document.getElementById('plantaoForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const data = document.getElementById('data').value;
             const horaInicio = document.getElementById('horaInicio').value;
             const tempoPlantao = document.getElementById('tempoPlantao').value;
-            const local = document.getElementById('local').value; // Captura o valor selecionado
+            const local = document.getElementById('local').value;
             const valorHora = document.getElementById('valorHora').value;
             const observacoes = document.getElementById('observacoes').value;
 
-            // Aqui você pode enviar os dados para o servidor
-            alert(`Plantão cadastrado com sucesso!\nData: ${data}\nHora de Início: ${horaInicio}\nTempo de Plantão: ${tempoPlantao} horas\nLocal: ${local}\nValor por Hora: R$ ${valorHora}\nObservações: ${observacoes}`);
-            this.reset();
+            const plantao = {
+                data,
+                horaInicio,
+                tempoPlantao,
+                local,
+                valorHora,
+                observacoes
+            };
+
+            try {
+                const docRef = await addDoc(collection(db, "plantoes"), plantao);
+                alert(`Plantão cadastrado com sucesso! ID: ${docRef.id}`);
+                this.reset();
+            } catch (error) {
+                console.error("Erro ao salvar plantão: ", error);
+                alert("Erro ao salvar plantão.");
+            }
         });
     </script>
 </body>
